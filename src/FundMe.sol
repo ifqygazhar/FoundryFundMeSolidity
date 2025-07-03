@@ -23,8 +23,9 @@ contract FundMe {
     //using const to reduce the gass
     uint256 public constant MINIMUM_USD = 5e18;
 
-    address[] public listOfFunds;
-    mapping(address funder => uint256 amountFunded) public addressToAmount;
+    address[] private s_funders;
+    mapping(address funder => uint256 amountFunded)
+        private s_addressAmountFunded;
 
     function fund() public payable {
         // uint256 currentConversion = PriceConverter.getConversionRate(msg.value);
@@ -32,20 +33,16 @@ contract FundMe {
         if (msg.value.getConversionRate(i_priceFeed) < MINIMUM_USD) {
             revert FundMe__NotEnoughFunds();
         }
-        listOfFunds.push(msg.sender);
-        addressToAmount[msg.sender] += msg.value;
+        s_funders.push(msg.sender);
+        s_addressAmountFunded[msg.sender] += msg.value;
     }
 
     function withdraw() public onlyOwner {
-        for (
-            uint256 fundIndex = 0;
-            fundIndex < listOfFunds.length;
-            fundIndex++
-        ) {
-            address funder = listOfFunds[fundIndex];
-            addressToAmount[funder] = 0;
+        for (uint256 fundIndex = 0; fundIndex < s_funders.length; fundIndex++) {
+            address funder = s_funders[fundIndex];
+            s_addressAmountFunded[funder] = 0;
         }
-        listOfFunds = new address[](0);
+        s_funders = new address[](0);
 
         //transfer
         // payable(msg.sender).transfer(address(this).balance);
@@ -78,5 +75,16 @@ contract FundMe {
 
     fallback() external payable {
         fund();
+    }
+
+    //getter
+    function getFunder(uint256 index) public view returns (address) {
+        return s_funders[index];
+    }
+
+    function getAddressAmountFunded(
+        address funder
+    ) public view returns (uint256) {
+        return s_addressAmountFunded[funder];
     }
 }
