@@ -10,7 +10,7 @@ error FundMe__CallFailed();
 
 contract FundMe {
     //using immutable to reduce the gass
-    address public immutable i_owner;
+    address private immutable i_owner;
     AggregatorV3Interface private immutable i_priceFeed;
 
     constructor(address priceFeedAddress) {
@@ -35,6 +35,23 @@ contract FundMe {
         }
         s_funders.push(msg.sender);
         s_addressAmountFunded[msg.sender] += msg.value;
+    }
+
+    function cheaperWithdraw() public onlyOwner {
+        uint256 fundersLength = s_funders.length;
+        for (uint256 i = 0; i < fundersLength; i++) {
+            address funder = s_funders[i];
+            s_addressAmountFunded[funder] = 0;
+        }
+
+        s_funders = new address[](0);
+
+        (bool statusCall, ) = payable(i_owner).call{
+            value: address(this).balance
+        }("");
+        if (!statusCall) {
+            revert FundMe__CallFailed();
+        }
     }
 
     function withdraw() public onlyOwner {
@@ -86,5 +103,9 @@ contract FundMe {
         address funder
     ) public view returns (uint256) {
         return s_addressAmountFunded[funder];
+    }
+
+    function getOwner() public view returns (address) {
+        return i_owner;
     }
 }

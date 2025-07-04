@@ -5,7 +5,7 @@ import {Script} from "forge-std/Script.sol";
 import {MockV3Aggregator} from "../test/mock/MockV3Aggregator.sol";
 
 contract HelperConfig is Script {
-    NetworkConfig public activeNetworkConfig;
+    NetworkConfig private activeNetworkConfig;
     uint256 private constant SEPOLIA_RPC_URL = 11155111;
     uint8 private constant MAINNET_RPC_URL = 1;
 
@@ -59,5 +59,14 @@ contract HelperConfig is Script {
         });
 
         return anvilConfig;
+    }
+
+    //getter
+    function getActiveNetworkConfig()
+        public
+        view
+        returns (NetworkConfig memory)
+    {
+        return activeNetworkConfig;
     }
 }
